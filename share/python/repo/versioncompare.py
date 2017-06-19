@@ -47,6 +47,9 @@ def version2float(v):
 
     if v == 'latest':
         return 1000.0
+    # Skip debian epoch
+    if ':' in v:
+        v = v.split(":")[1]
 
     parts = v.split("pre")
     if 2 == len(parts):
