@@ -52,7 +52,7 @@ parser.add_argument(
 parser.add_argument(
     "-t", "--type",
     help="Process repository type TYPE",
-    choices=["deb", "yum", "zypper"],
+    choices=["deb", "yum", "zypper", "packages", "installer"],
     default=None)
 
 args = parser.parse_args()
@@ -84,7 +84,14 @@ if args.type == 'zypper':
     print("Parsing zypper")
     pkg_managers['zypper'] = repo.zypper.Manager(
         root=args.root, releases=[args.release])
-
+if args.type == 'installer':
+    print("Parsing installers")
+    pkg_managers['installers'] = repo.installers.Manager(
+        root=args.root, releases=[args.release])
+if args.type == 'packages':
+    print("Parsing packages")
+    pkg_managers['packages'] = repo.packages.Manager(
+        root=args.root)
 pdict = dict()
 advisories = {}
 today = datetime.datetime.now().strftime("%Y-%m-%d")
