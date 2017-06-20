@@ -17,6 +17,7 @@ Repository Management
 """
 
 import atexit
+import datetime
 import fnmatch
 import hashlib
 import os
@@ -191,6 +192,65 @@ class Repository(object):
         Iterate through the packages in this repository
         """
         return self.packages.keys()
+
+
+    @staticmethod
+    def create_index(path, recursive=False):
+        for root, dirs, filenames in os.walk(path):
+            if not recursive:
+                del dirs[0:]
+            indexfile = os.path.join(root, "index.html")
+            if (not os.path.exists(indexfile)
+                    or (
+                        os.stat(root).st_mtime 
+                        >= os.stat(indexfile).st_mtime)):
+                try:
+                    f = open(indexfile, "w")
+                    f.write(
+                        "<html><head><title>{0}</title></head>\n"
+                        "<body>"
+                        "<table>\n"
+                        "<tr>"
+                        "<td><a href='../index.html'>Parent Directory</a></td>"
+                        "<td>{1}</td></tr>\n"
+                        .format(
+                            os.path.basename(root),
+                            datetime.datetime.fromtimestamp(
+                                os.stat(
+                                    os.path.join(
+                                        root, "..")).st_mtime).isoformat()))
+
+                    dirs.sort()
+                    for dir in dirs:
+                        f.write(
+                            "<tr>"
+                            "<td><a href='{0}/index.html'>{0}/</a></td>"
+                            "<td>{1}/</td></tr>\n"
+                            .format(
+                                dir,
+                                datetime.datetime.fromtimestamp(
+                                    os.stat(
+                                        os.path.join(root, dir)).st_mtime
+                                ).isoformat()))
+
+                    filenames.sort()
+                    for pkg in filenames:
+                        pkg_filename = os.path.join(root, pkg)
+                        if (os.path.isfile(pkg_filename)
+                                and not pkg_filename.endswith(".html")):
+                            f.write(
+                                "<tr>"
+                                "<td><a href='{0}'>{0}</a></td>"
+                                "<td>{1}</td></tr>\n"
+                                .format(
+                                    pkg,
+                                    datetime.datetime.fromtimestamp(
+                                        os.stat(
+                                            pkg_filename).st_mtime
+                                    ).isoformat()))
+                    f.write("</table></body></html>\n")
+                finally:
+                    f.close()
 
 
 class Release(object):

@@ -203,7 +203,8 @@ DATADIR RPMS
         directory_yast_path = os.path.join(distro_repodir, "directory.yast")
         directory_yast_file = file(directory_yast_path, "w")
         for entry in os.listdir(distro_repodir):
-            directory_yast_file.write(entry + "\n")
+            if entry != "index.html":
+                directory_yast_file.write(entry + "\n")
         directory_yast_file.close()
 
         os.system('cd "%s"; create_package_descr -d "RPMS"' % (distro_repodir))
@@ -211,11 +212,12 @@ DATADIR RPMS
         descr_dir = os.path.join(distro_repodir, "setup", "descr")
 
         for entry in os.listdir(descr_dir):
-            entry_file = file(os.path.join(descr_dir, entry), "r")
-            entry_sha1 = hashlib.sha1()
-            entry_sha1.update(entry_file.read())
-            content_file.write("META SHA1 %s  %s\n" % (
-                entry_sha1.hexdigest(), entry))
+            if entry != "index.html":
+                entry_file = file(os.path.join(descr_dir, entry), "r")
+                entry_sha1 = hashlib.sha1()
+                entry_sha1.update(entry_file.read())
+                content_file.write("META SHA1 %s  %s\n" % (
+                    entry_sha1.hexdigest(), entry))
 
         key_sha1 = hashlib.sha1()
         key_sha1.update(repo.public_key)
@@ -231,6 +233,7 @@ DATADIR RPMS
                       (distro_repodir))
         else:
             os.system("cd \"%s\"; gpg -ab content" % (distro_repodir))
+        self.create_index(distro_repodir, recursive=True)
 
 
 class Release(repo.Release):

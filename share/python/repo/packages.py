@@ -96,14 +96,6 @@ class Repository(repo.Repository):
                     os.chown(distro_repodir, repo.uid, repo.gid)
                     os.chmod(distro_repodir, 0o2775)
 
-            f = open(os.path.join(distro_repodir, "index.html"), "w")
-            f.write(
-                """
-                <html><head><title>{0}</title></head>
-                <body>
-                <table>
-                <tr><td><a href='..'>Parent Directory</a></td><td></td></tr>
-                """.format(os.path.basename(distro_repodir)))
             entries = os.listdir(distro_repodir)
             entries.sort()
             for pkg in entries:
@@ -111,15 +103,7 @@ class Repository(repo.Repository):
                 if (os.path.isfile(pkg_filename)
                         and not pkg_filename.endswith(".html")):
                     repo._digest_file(pkg_filename)
-                    f.write(
-                        """
-                        <tr><td><a href='{0}'>{1}</a></td><td>{2}</td></tr>
-                        """.format(
-                        os.path.basename(pkg_filename),
-                        os.path.basename(pkg_filename),
-                        datetime.datetime.fromtimestamp(
-                            os.stat(pkg_filename).st_mtime).isoformat()))
-            f.write("</table></body></html>")
+            self.create_index(distro_repodir)
 
     def update_gcs_version_file(self):
         """

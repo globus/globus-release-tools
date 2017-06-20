@@ -79,7 +79,7 @@ if args.type == 'deb':
 if args.type == 'yum':
     print("Parsing yum")
     pkg_managers['yum'] = repo.yum.Manager(
-        root=args.root, releases=[args.releases])
+        root=args.root, releases=[args.release])
 if args.type == 'zypper':
     print("Parsing zypper")
     pkg_managers['zypper'] = repo.zypper.Manager(

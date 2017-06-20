@@ -215,6 +215,7 @@ class Repository(repo.Repository):
         if force or self.dirty:
             self.__createrepo()
             self.dirty = False
+            self.create_index(self.repo_path, recursive=True)
 
     def __createrepo(self):
         if '/el/5' in self.repo_path and self.use_sha_arg:
@@ -232,7 +233,10 @@ class Release(repo.Release):
     """
     def __init__(self, name, topdir, repos):
         r = {}
+        self.topdir = topdir
         for osname in repos:
+            if osname == 'index.html':
+                continue
             r[osname] = {}
             for arch in repos[osname]:
                 if arch == 'SRPMS' or arch == 'src':
@@ -251,6 +255,10 @@ class Release(repo.Release):
             if package.os in self.repositories:
                 return [self.repositories[package.os][package.arch]]
         return []
+
+    def update_metadata(self, osname=None, arch=None, force=False):
+        super(Release, self).update_metadata(osname, arch, force)
+        Repository.create_index(self.topdir, recursive=True)
 
 
 class Manager(repo.Manager):
@@ -311,18 +319,21 @@ class Manager(repo.Manager):
         oses = {}
         release_os_dir = os.path.join(root, release, "rpm")
 
-        if os.path.exists(release_os_dir):
+        if os.path.exists(release_os_dir) and os.path.isdir(release_os_dir):
             for osname in os.listdir(release_os_dir):
                 if osname == 'sles':
                     continue
                 osnamedir = os.path.join(release_os_dir, osname)
+                if not os.path.isdir(osnamedir):
+                    continue
                 for osver in os.listdir(osnamedir):
                     osnamever = os.path.join(osname, osver)
                     osnameverdir = os.path.join(release_os_dir, osnamever)
                     if os.path.isdir(osnameverdir):
                         oses[osnamever] = []
                         for arch in os.listdir(osnameverdir):
-                            oses[osnamever].append(arch)
+                            if os.path.isdir(os.path.join(osnameverdir, arch)):
+                                oses[osnamever].append(arch)
         return oses
 
     def __str__(self):

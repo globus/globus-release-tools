@@ -245,6 +245,7 @@ class Repository(repo.Repository):
             oscmd = 'reprepro --silent -b "%s" export' % (self.repo_path)
             os.system(oscmd)
             self.dirty = False
+            self.create_index(self.repo_path, recursive=True)
 
     @staticmethod
     def _update_deb_distributions_conf(conf_file_path, distro):
