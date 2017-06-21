@@ -196,14 +196,31 @@ class Repository(object):
 
     @staticmethod
     def create_index(path, recursive=False):
-        for root, dirs, filenames in os.walk(path):
+        for root, dirs, filenames in os.walk(path, topdown=not recursive):
             if not recursive:
                 del dirs[0:]
             indexfile = os.path.join(root, "index.html")
-            if (not os.path.exists(indexfile)
-                    or (
-                        os.stat(root).st_mtime 
-                        >= os.stat(indexfile).st_mtime)):
+            index_mtime = 0
+            regenerate_index = False
+            if os.path.exists(indexfile):
+                index_mtime = os.stat(indexfile).st_mtime
+            else:
+                regenerate_index = True
+
+            if not regenerate_index:
+                for dir in dirs:
+                    fulldir = os.path.join(root, dir)
+                    if os.stat(fulldir).st_mtime >= index_mtime:
+                        regenerate_index = True
+                        break
+            if not regenerate_index:
+                for filename in filenames:
+                    fullfilename = os.path.join(root, filename)
+                    if os.stat(fullfilename).st_mtime >= index_mtime:
+                        regenerate_index = True
+                        break
+
+            if regenerate_index:
                 try:
                     f = open(indexfile, "w")
                     f.write(
@@ -251,6 +268,7 @@ class Repository(object):
                     f.write("</table></body></html>\n")
                 finally:
                     f.close()
+                    os.utime(root, None)
 
 
 class Release(object):
