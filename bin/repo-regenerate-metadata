@@ -52,7 +52,7 @@ parser.add_argument(
 parser.add_argument(
     "-t", "--type",
     help="Process repository type TYPE",
-    choices=["deb", "yum", "zypper", "packages", "installer"],
+    choices=["all", "deb", "yum", "zypper", "packages", "installer"],
     default=None)
 
 args = parser.parse_args()
@@ -72,23 +72,23 @@ print("Parsing repositories")
 print("====================")
 
 pkg_managers = dict()
-if args.type == 'deb':
+if args.type == 'deb' or args.type == 'all':
     print("Parsing deb")
     pkg_managers['deb'] = repo.deb.Manager(
         root=args.root, releases=[args.release])
-if args.type == 'yum':
+if args.type == 'yum' or args.type == 'all':
     print("Parsing yum")
     pkg_managers['yum'] = repo.yum.Manager(
         root=args.root, releases=[args.release])
-if args.type == 'zypper':
+if args.type == 'zypper' or args.type == 'all':
     print("Parsing zypper")
     pkg_managers['zypper'] = repo.zypper.Manager(
         root=args.root, releases=[args.release])
-if args.type == 'installer':
+if args.type == 'installer' or args.type == 'all':
     print("Parsing installers")
     pkg_managers['installers'] = repo.installers.Manager(
         root=args.root, releases=[args.release])
-if args.type == 'packages':
+if args.type == 'packages' or args.type == 'all':
     print("Parsing packages")
     pkg_managers['packages'] = repo.packages.Manager(
         root=args.root)
