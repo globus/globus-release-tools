@@ -84,7 +84,9 @@ def _digest_file(filename, force=False):
 
     for h in ['md5', 'sha1', 'sha512']:
         hashname = filename + "." + h
-        if force or not os.path.exists(hashname):
+        if (force
+                or not os.path.exists(hashname)
+                or os.path.getmtime(filename) > os.path.getmtime(hashname)):
             digester = hashlib.new(h)
             f = file(filename, "r")
             digester.update(f.read())
