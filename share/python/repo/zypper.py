@@ -43,10 +43,16 @@ class Repository(repo.Repository):
     grp_restring = r"=Grp:[\t ]*(?P<group>.*)\n"
     lic_restring = r"=Lic:[\t ]*(?P<license>.*)\n"
     loc_restring = r"=Loc:[\t ]*(\d+)[\t ]+(?P<location>[^ \t\n]*).*\n"
-    pkg_restring = r"=Pkg:[\t ]*(?P<pkgname>[^ \t]*)[\t ]+(?P<pkgversion>[^ \t]*)[ \t]+(?P<pkgrelease>[^ \t]*)[ \t]+(?P<arch>.+)\n"
+    pkg_restring = (
+        r"=Pkg:[\t ]*(?P<pkgname>[^ \t]*)[\t ]+"
+        "(?P<pkgversion>[^ \t]*)"
+        "[ \t]+(?P<pkgrelease>[^ \t]*)[ \t]+(?P<arch>.+)\n")
     shr_restring = r"=Shr:[\t ].*\n"
     siz_restring = r"=Siz:[\t ]*(?P<size>\d+).*\n"
-    src_restring = r"=Src:[\t ]*(?P<srcname>\S+)[\t ]+(?P<srcver>\S+)[\t ]+(?P<srcrel>\S+)[\t ]+(?P<srcarch>.+)\n"
+    src_restring = (
+        r"=Src:[\t ]*(?P<srcname>\S+)[\t ]+"
+        "(?P<srcver>\S+)[\t ]+"
+        "(?P<srcrel>\S+)[\t ]+(?P<srcarch>.+)\n")
     tim_restring = r"=Tim:[\t ]*(?P<time>\d+)\n"
     ver_restring = r"=Ver:[\t ]*(?P<repover>[0-9.]+)\n"
     con_restring = r"\+Con:[\t ]*(?P<conflicts>(\n(?!-Con:).*)*)\n-Con:\n"

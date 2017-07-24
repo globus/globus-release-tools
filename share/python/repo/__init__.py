@@ -195,7 +195,6 @@ class Repository(object):
         """
         return self.packages.keys()
 
-
     @staticmethod
     def create_index(path, recursive=False):
         for root, dirs, filenames in os.walk(path, topdown=not recursive):

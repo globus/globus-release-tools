@@ -60,17 +60,15 @@ class Repository(repo.packages.Repository):
             latest_candidates = [
                 (pkg)
                 for pkg in self.packages[new_package.name]
-                if pkg.name == new_package.name
+                if (
+                    pkg.name == new_package.name
                     and pkg.version.strversion != "latest"
-                    and pkg.version > new_package.version
+                    and pkg.version > new_package.version)
             ]
             if len(latest_candidates) == 0:
                 shutil.copy(new_package.path, new_package_path)
                 if update_metadata:
                     self.update_metadata(True)
-
-
-
 
 
 class Release(repo.Release):
@@ -98,12 +96,15 @@ class Release(repo.Release):
     def get_packages(
             self, name=None, os=None, version=None, arch=None,
             source=None, newest_only=False):
-        res = [p
-                for repository in self.repositories_for_os_arch(os, arch)
-                for p in repository.get_packages(
-                    name=name, version=version, source=source,
-                    newest_only=newest_only)]
+        res = [
+            p
+            for repository in self.repositories_for_os_arch(os, arch)
+            for p in repository.get_packages(
+                name=name, version=version, source=source,
+                newest_only=newest_only)
+        ]
         return res
+
 
 class Manager(repo.Manager):
     """
@@ -128,22 +129,35 @@ class Manager(repo.Manager):
             InstallerInfo(
                 "Linux Binary Installer",
                 "linux",
-                r"(?P<name>(?P<basename>[a-z_]*)-(?P<version>([0-9.]|beta|rc)+)-(?P<arch>[a-z0-9_-]+))(?P<buildno>-Build-(?P<release>[0-9]+)).tar.gz$",
+                r"(?P<name>"
+                "(?P<basename>[a-z_]*)"
+                "-(?P<version>([0-9.]|beta|rc)+)"
+                "-(?P<arch>[a-z0-9_-]+))"
+                "(?P<buildno>-Build-(?P<release>[0-9]+)).tar.gz$",
                 "{basename}-{version}-{arch}{buildno}.tar.gz".format),
             InstallerInfo(
                 "macos Binary Installer",
                 "mac",
-                r"(?P<name>(?P<basename>[a-zA-Z_]*)-(?P<version>([0-9.]|beta|rc)+))(?P<buildno>-build(?P<release>[0-9]+))?(?P<extension>\.pkg|\.tar\.gz)$",
+                r"(?P<name>"
+                "(?P<basename>[a-zA-Z_]*)"
+                "-(?P<version>([0-9.]|beta|rc)+))"
+                "(?P<buildno>-build(?P<release>[0-9]+))?"
+                "(?P<extension>\.pkg|\.tar\.gz)$",
                 "{basename}-{version}{buildno}{extension}".format),
             InstallerInfo(
                 "RPM Installer",
                 'repo/rpm',
-                r"(?P<name>(?P<basename>[a-z-]*[a-z])-(?P<version>[0-9.]*[0-9]))(?P<buildno>-(?P<release>[0-9]+))(?P<extension>.*\.noarch\.rpm)$",
+                r"(?P<name>(?P<basename>[a-z-]*[a-z])"
+                "-(?P<version>[0-9.]*[0-9]))"
+                "(?P<buildno>-(?P<release>[0-9]+))"
+                "(?P<extension>.*\.noarch\.rpm)$",
                 "{basename}-{version}{buildno}{extension}".format),
             InstallerInfo(
                 'Debian Installer',
                 "repo/deb",
-                r"(?P<name>(?P<basename>[a-z-]*[a-z])_(?P<version>[0-9.]+))(?P<buildno>-(?P<release>[0-9]+))?_all.deb$",
+                r"(?P<name>(?P<basename>[a-z-]*[a-z])"
+                "_(?P<version>[0-9.]+))"
+                "(?P<buildno>-(?P<release>[0-9]+))?_all.deb$",
                 "{basename}_{version}{buildno}_all.deb".format),
             InstallerInfo(
                 "Source Installer",
@@ -153,12 +167,19 @@ class Manager(repo.Manager):
             InstallerInfo(
                 "Cygwin Installer",
                 'windows',
-                r"(?P<name>(?P<basename>[a-z_]*)-(?P<version>([0-9.]|beta|rc)*)-(?P<arch>[a-z0-9]*-pc-cygwin))(?P<buildno>-Build-(?P<release>[0-9]+)).zip$",
+                r"(?P<name>"
+                "(?P<basename>[a-z_]*)"
+                "-(?P<version>([0-9.]|beta|rc)*)"
+                "-(?P<arch>[a-z0-9]*-pc-cygwin))"
+                "(?P<buildno>-Build-(?P<release>[0-9]+)).zip$",
                 "{basename}-{version}-{arch}{buildno}.zip".format),
             InstallerInfo(
                 "Mingw32 Installer",
                 "windows",
-                r"(?P<name>(?P<basename>[a-z_]*)-(?P<version>([0-9.]|beta|rc)*)-(?P<arch>[a-z0-9]*-w64-mingw32))(?P<buildno>-Build-(?P<release>[0-9]+)).zip$",
+                r"(?P<name>(?P<basename>[a-z_]*)"
+                "-(?P<version>([0-9.]|beta|rc)*)"
+                "-(?P<arch>[a-z0-9]*-w64-mingw32))"
+                "(?P<buildno>-Build-(?P<release>[0-9]+)).zip$",
                 "{basename}-{version}-{arch}{buildno}.zip".format),
         ]
 

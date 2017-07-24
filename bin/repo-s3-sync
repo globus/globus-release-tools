@@ -312,7 +312,7 @@ def main():
 
     # for clarity's sake: this does not need to have a trailing slash, but it
     # will be treated as a dirname on the destination
-    upload_prefix = os.path.join('data/', args.s3_path)
+    upload_prefix = args.s3_path
 
     source_dir = args.root
 

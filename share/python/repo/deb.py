@@ -199,11 +199,13 @@ class Repository(repo.Repository):
                     os.chmod(dirname, 0o2775)
                     dirname = os.path.dirname(dirname)
         if not os.path.exists(dest_path):
-            oscmd = 'reprepro --silent -b %(repodir)s --export=never include %(codename)s %(pkgpath)s' % {
+            oscmd = (
+                'reprepro --silent -b %(repodir)s '
+                '--export=never include %(codename)s %(pkgpath)s' % {
                         'repodir': self.repo_path,
                         'codename': self.codename,
                         'pkgpath': package.path
-                    }
+                    })
             os.system(oscmd)
             if update_metadata:
                 self.update_metadata()
