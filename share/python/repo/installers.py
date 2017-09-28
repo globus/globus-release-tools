@@ -178,7 +178,7 @@ class Manager(repo.Manager):
                 "windows",
                 r"(?P<name>(?P<basename>[a-z_]*)"
                 "-(?P<version>([0-9.]|beta|rc)*)"
-                "-(?P<arch>[a-z0-9]*-w64-mingw32))"
+                "-(?P<arch>[a-z0-9_]*-w64-mingw32))"
                 "(?P<buildno>-Build-(?P<release>[0-9]+)).zip$",
                 "{basename}-{version}-{arch}{buildno}.zip".format),
         ]
