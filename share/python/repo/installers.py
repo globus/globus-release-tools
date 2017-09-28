@@ -170,7 +170,7 @@ class Manager(repo.Manager):
                 r"(?P<name>"
                 "(?P<basename>[a-z_]*)"
                 "-(?P<version>([0-9.]|beta|rc)*)"
-                "-(?P<arch>[a-z0-9]*-pc-cygwin))"
+                "-(?P<arch>[a-z0-9_]*-pc-cygwin))"
                 "(?P<buildno>-Build-(?P<release>[0-9]+)).zip$",
                 "{basename}-{version}-{arch}{buildno}.zip".format),
             InstallerInfo(
