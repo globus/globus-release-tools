@@ -44,22 +44,26 @@ class Repository(repo.Repository):
         self.codename = codename
         self.release = release
         self.dirty = False
+        print("Creating {0} for {1}".format(release, codename))
 
         if arch == 'source' or arch == 'all':
-            pkglist = subprocess.Popen([
+            cmd = [
                 'aptly',
                 '--format',
                 '{{.Package}}|{{.Version}}|{{.Architecture}}|{{.Source}}',
-                'repo', 'search', codename, '$Architecture (=source)'],
-                stdout=subprocess.PIPE)
+                'repo', 'search', '{0}-{1}'.format(codename, release),
+                '$Architecture (=source)']
+            print(" ".join(cmd))
+            pkglist = subprocess.Popen(cmd, stdout=subprocess.PIPE)
             out, err = pkglist.communicate()
         else:
-            pkglist = subprocess.Popen([
+            cmd = [
                 'aptly', '--format',
                 '{{.Package}}|{{.Version}}|{{.Architecture}}|{{.Source}}',
                 'repo', 'search', '{0}-{1}'.format(codename, release),
-                '$Architecture (={0})'.format(arch)],
-                stdout=subprocess.PIPE)
+                '$Architecture (={0})'.format(arch)]
+            print(" ".join(cmd))
+            pkglist = subprocess.Popen(cmd, stdout=subprocess.PIPE)
             out, err = pkglist.communicate()
 
         for line in out.split("\n"):
@@ -69,9 +73,15 @@ class Repository(repo.Repository):
             release = None
             pkgarch = None
             line = line.rstrip()
+            if line == '':
+                continue
+
             name, version, pkgarch, source = line.split("|")
 
-            version, release = version.strip().split(": ")[1].split("-", 1)
+            if ':' in version:
+                version, release = version.strip().split(": ")[1].split("-", 1)
+            else:
+                version, release = version.strip().split("-", 1)
             if name not in self.packages:
                 self.packages[name] = []
 
@@ -83,7 +93,7 @@ class Repository(repo.Repository):
                                 name,
                                 version,
                                 release,
-                                '{1}_{2}-{3}.dsc'.format(
+                                '{0}_{1}-{2}.dsc'.format(
                                     name,
                                     version,
                                     release),
@@ -127,15 +137,17 @@ class Repository(repo.Repository):
             immediately or not.
         """
         if package.path.endswith("changes"):
-            subprocess.Popen([
+            cmd = [
                 'aptly',
                 '--no-remove-files=true',
                 '--repo={0}'.format(self.codename),
                 'repo', 'include', package.path,
-                ]).communicate()
+            ]
+            print(" ".join(cmd))
+            subprocess.Popen(cmd).communicate()
         else:
             if package.arch == 'src':
-                subprocess.Popen([
+                cmd = [
                     'aptly',
                     'repo',
                     '-with-deps',
@@ -147,9 +159,11 @@ class Repository(repo.Repository):
                         package.source_name,
                         package.version.strversion,
                         package.version.release),
-                    ]).communicate()
+                ]
+                print(" ".join(cmd))
+                subprocess.Popen(cmd).communicate()
             else:
-                subprocess.Popen([
+                cmd = [
                     'aptly',
                     'repo',
                     'copy',
@@ -160,7 +174,9 @@ class Repository(repo.Repository):
                         package.version.strversion,
                         package.version.release,
                         package.arch),
-                    ]).communicate()
+                ]
+                print(" ".join(cmd))
+                subprocess.Popen(cmd).communicate()
 
         if update_metadata:
             self.update_metadata()
@@ -191,13 +207,15 @@ class Repository(repo.Repository):
         Update the package metadata from the changes files in a repository
         """
         if self.dirty or force:
-            subprocess.Popen([
+            cmd = [
                 'aptly',
                 'publish',
                 'update',
                 self.codename,
                 self.release,
-                ]).communicate()
+            ]
+            print(" ".join(cmd))
+            subprocess.Popen(cmd).communicate()
             self.dirty = False
             self.create_index(self.repo_path, recursive=True)
 
@@ -206,6 +224,7 @@ class Release(repo.Release):
     def __init__(
             self, name, topdir, codenames=default_codenames,
             arches=default_arches):
+        print("Codenames={0}".format(codenames))
         r = {}
         for codename in codenames:
             r[codename] = {}
@@ -273,6 +292,7 @@ class Manager(repo.Manager):
         if exclude_os_names is not None:
             codenames = [cn for cn in codenames if cn not in exclude_os_names]
         for release in releases:
+            print("release={0}".format(release))
             deb_releases[release] = Release(
                     release,
                     os.path.join(root, 'aptly'),
@@ -288,8 +308,10 @@ class Manager(repo.Manager):
                 ['aptly', '--raw', 'repo', 'list'],
                 stdout=subprocess.PIPE)
             out, err = aptly.communicate()
-            codenames = list(
+            codenames = [
+                x for x in list(
                 set(repo.split('-')[0] for repo in out.split("\n")))
+                if x != '']
         return codenames
 
     def __str__(self):
