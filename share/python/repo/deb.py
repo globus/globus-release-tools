@@ -251,6 +251,10 @@ class Release(repo.Release):
         else:
             return []
 
+    def update_metadata(self, osname=None, arch=None, force=False):
+        for repository in self.repositories:
+             r = self.repositories[repository]
+             r[r.keys()[0]].update_metadata(force)
 
 class Manager(repo.Manager):
     """
