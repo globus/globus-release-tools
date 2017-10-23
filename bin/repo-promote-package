@@ -155,7 +155,10 @@ for man in pkg_managers:
         pkey = "-".join([p.name, p.version.strversion])
         if pkey not in pdict:
             pdict[pkey] = set()
-        pdict[pkey].add(p.os)
+        pos = p.os
+        if '-' in pos:
+            pos = pos.split('-')[0]
+        pdict[pkey].add(pos)
 
     if advisories is not None:
         advisories.add_advisories(packages)

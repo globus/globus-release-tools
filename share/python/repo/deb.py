@@ -44,7 +44,6 @@ class Repository(repo.Repository):
         self.codename = codename
         self.release = release
         self.dirty = False
-        print("Creating {0} for {1}".format(release, codename))
 
         if arch == 'source' or arch == 'all':
             cmd = [
@@ -54,7 +53,6 @@ class Repository(repo.Repository):
                 '{{.Package}}|{{.Version}}|{{.Architecture}}|{{.Source}}',
                 'repo', 'search', '{0}-{1}'.format(codename, release),
                 '$Architecture (=source)']
-            print(" ".join(cmd))
             pkglist = subprocess.Popen(cmd, stdout=subprocess.PIPE)
             out, err = pkglist.communicate()
         else:
@@ -65,7 +63,6 @@ class Repository(repo.Repository):
                 '{{.Package}}|{{.Version}}|{{.Architecture}}|{{.Source}}',
                 'repo', 'search', '{0}-{1}'.format(codename, release),
                 '$Architecture (={0})'.format(arch)]
-            print(" ".join(cmd))
             pkglist = subprocess.Popen(cmd, stdout=subprocess.PIPE)
             out, err = pkglist.communicate()
 
@@ -147,7 +144,6 @@ class Repository(repo.Repository):
                 '--repo={0}'.format(self.codename),
                 'repo', 'include', package.path,
             ]
-            print(" ".join(cmd))
             subprocess.Popen(cmd).communicate()
         else:
             if package.arch == 'src':
@@ -165,7 +161,6 @@ class Repository(repo.Repository):
                         package.version.strversion,
                         package.version.release),
                 ]
-                print(" ".join(cmd))
                 subprocess.Popen(cmd).communicate()
             else:
                 cmd = [
@@ -181,7 +176,6 @@ class Repository(repo.Repository):
                         package.version.release,
                         package.arch),
                 ]
-                print(" ".join(cmd))
                 subprocess.Popen(cmd).communicate()
 
         if update_metadata:
@@ -221,7 +215,6 @@ class Repository(repo.Repository):
                 self.codename,
                 self.release,
             ]
-            print(" ".join(cmd))
             subprocess.Popen(cmd).communicate()
             self.dirty = False
             self.create_index(self.repo_path, recursive=True)
@@ -231,7 +224,6 @@ class Release(repo.Release):
     def __init__(
             self, name, topdir, codenames=default_codenames,
             arches=default_arches):
-        print("Codenames={0}".format(codenames))
         r = {}
         for codename in codenames:
             r[codename] = {}
@@ -253,8 +245,9 @@ class Release(repo.Release):
         repoarch = package.arch
         if package.arch == 'all':
             repoarch = 'src'
-        if package.os in self.repositories:
-            return [self.repositories[package.os][repoarch]]
+        osname = package.os.split('-')[0]
+        if osname in self.repositories:
+            return [self.repositories[osname][repoarch]]
         else:
             return []
 
@@ -303,7 +296,6 @@ class Manager(repo.Manager):
         if exclude_os_names is not None:
             codenames = [cn for cn in codenames if cn not in exclude_os_names]
         for release in releases:
-            print("release={0}".format(release))
             deb_releases[release] = Release(
                     release,
                     os.path.join(root, 'aptly'),
