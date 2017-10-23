@@ -16,10 +16,10 @@
 Package to manage the Globus Toolkit Debian repositories
 """
 
-import gzip
 import os
-import os.path
 import re
+import subprocess
+
 import repo
 import repo.package
 
@@ -38,133 +38,75 @@ class Repository(repo.Repository):
     from the release's Sources.gz file
     """
 
-    def __init__(self, repo_path, codename, arch):
+    def __init__(self, repo_path, codename, arch, release):
         super(Repository, self).__init__()
         self.repo_path = repo_path
         self.codename = codename
+        self.release = release
         self.dirty = False
 
-        pooldir = os.path.join(repo_path, "pool", "contrib")
-        distdir = os.path.join(repo_path, "dists", codename)
-
-        if not os.path.exists(distdir):
-            self.update_metadata(True)
-
-        packages_file = os.path.join(
-            distdir, "contrib", "binary-%s" % (arch), "Packages.gz")
-
         if arch == 'source' or arch == 'all':
-            packages_file = os.path.join(
-                distdir, "contrib", arch, "Sources.gz")
+            pkglist = subprocess.Popen([
+                'aptly',
+                '--format',
+                '{{.Package}}|{{.Version}}|{{.Architecture}}|{{.Source}}',
+                'repo', 'search', codename, '$Architecture (=source)'],
+                stdout=subprocess.PIPE)
+            out, err = pkglist.communicate()
+        else:
+            pkglist = subprocess.Popen([
+                'aptly', '--format',
+                '{{.Package}}|{{.Version}}|{{.Architecture}}|{{.Source}}',
+                'repo', 'search', '{0}-{1}'.format(codename, release),
+                '$Architecture (={0})'.format(arch)],
+                stdout=subprocess.PIPE)
+            out, err = pkglist.communicate()
 
-        pf = gzip.open(packages_file)
-
-        name = None
-        source = None
-        version = None
-        release = None
-        filename = None
-        pkgarch = None
-
-        for line in pf:
+        for line in out.split("\n"):
+            name = None
+            source = None
+            version = None
+            release = None
+            pkgarch = None
             line = line.rstrip()
+            name, version, pkgarch, source = line.split("|")
 
-            if line.startswith("Package: "):
-                name = line.split(": ", 1)[1]
-            elif line.startswith("Source: "):
-                source = line.split(": ", 1)[1]
-            elif line.startswith("Version: "):
-                version, release = line.strip().split(": ")[1].split("-", 1)
-            elif line.startswith("Filename: "):
-                filename = line.split(": ", 1)[1]
-            elif line.startswith("Architecture: "):
-                pkgarch = line.split(": ", 1)[1]
-            elif line == "":
-                if name not in self.packages:
-                    self.packages[name] = []
+            version, release = version.strip().split(": ")[1].split("-", 1)
+            if name not in self.packages:
+                self.packages[name] = []
 
                 if arch == 'source':
-                    src = name + "_" + version
-                    suffix = "source"
-                    filename = "%s-%s_%s.changes" % (src, release, suffix)
-                    poolsubdir = filename[0:1]
-                    if filename.startswith("lib"):
-                        poolsubdir = filename[0:4]
-
-                    filepath = os.path.join(
-                            pooldir,
-                            poolsubdir,
-                            filename.split("_", 1)[0],
-                            filename)
+                    source = name
+                    src = source
                     self.packages[name].append(
                             repo.package.Metadata(
                                 name,
                                 version,
                                 release,
-                                filepath,
+                                '{1}_{2}-{3}.dsc'.format(
+                                    name,
+                                    version,
+                                    release),
                                 'src',
                                 src,
-                                self.codename))
-                    if pkgarch == 'all':
-                        suffix = "all"
-                        filename = "%s-%s_%s.changes" % (src, release, suffix)
-                        poolsubdir = filename[0:1]
-                        if filename.startswith("lib"):
-                            poolsubdir = filename[0:4]
-                        filepath = os.path.join(
-                                pooldir,
-                                poolsubdir,
-                                filename.split("_", 1)[0],
-                                filename)
-                        self.packages[name].append(
-                                repo.package.Metadata(
-                                    name,
-                                    version,
-                                    release,
-                                    filepath,
-                                    pkgarch,
-                                    src,
-                                    self.codename))
+                                '{0}-{1}'.format(self.codename, self.release)))
                 else:
-                    if source is None:
+                    if source is None or source == '<no value>':
                         source = name
-                    src = source + "_" + version
-
-                    archcands = [
-                        pkgarch, "all+"+pkgarch,
-                        "source+" + pkgarch, "source+all+" + pkgarch]
-                    filepath = ""
-                    for archcand in archcands:
-                        changesfile = "%s-%s_%s.changes" % (
-                            src, release, archcand)
-                        poolsubdir = changesfile[0:1]
-                        if changesfile.startswith("lib"):
-                            poolsubdir = changesfile[0:4]
-                        testfile = os.path.join(
-                                pooldir,
-                                poolsubdir,
-                                changesfile.split("_", 1)[0],
-                                changesfile)
-                        if os.path.exists(testfile):
-                            filepath = testfile
-                            break
-                    if filepath != "":
-                        self.packages[name].append(
-                                repo.package.Metadata(
+                    src = source
+                    self.packages[name].append(
+                            repo.package.Metadata(
+                                name,
+                                version,
+                                release,
+                                '{0}_{1}-{2}_{3}.deb'.format(
                                     name,
                                     version,
                                     release,
-                                    filepath,
-                                    arch,
-                                    src,
-                                    self.codename))
-
-                name = None
-                source = None
-                version = None
-                release = None
-                filename = None
-                pkgarch = None
+                                    pkgarch),
+                                pkgarch,
+                                src,
+                                '{0}-{1}'.format(self.codename, self.release)))
 
         for n in self.packages:
             self.packages[n].sort()
@@ -184,39 +126,52 @@ class Repository(repo.Repository):
             Flag indicating whether to update the repository metadata
             immediately or not.
         """
-        pkg_basename = os.path.basename(package.path)
-        pkg_dest_dir = os.path.join(
-            self.repo_path, "pool", "contrib",
-            pkg_basename[0],
-            package.source_name[:package.source_name.find("_")])
-        dest_path = os.path.join(pkg_dest_dir, pkg_basename)
-        if not os.path.exists(pkg_dest_dir):
-            os.makedirs(pkg_dest_dir)
-            if repo.gid is not None:
-                dirname = pkg_dest_dir
-                while dirname != self.repo_path:
-                    os.chown(dirname, repo.uid, repo.gid)
-                    os.chmod(dirname, 0o2775)
-                    dirname = os.path.dirname(dirname)
-        if not os.path.exists(dest_path):
-            oscmd = (
-                'reprepro --silent -b %(repodir)s '
-                '--export=never include %(codename)s %(pkgpath)s' % {
-                        'repodir': self.repo_path,
-                        'codename': self.codename,
-                        'pkgpath': package.path
-                    })
-            os.system(oscmd)
-            if update_metadata:
-                self.update_metadata()
+        if package.path.endswith("changes"):
+            subprocess.Popen([
+                'aptly',
+                '--no-remove-files=true',
+                '--repo={0}'.format(self.codename),
+                'repo', 'include', package.path,
+                ]).communicate()
+        else:
+            if package.arch == 'src':
+                subprocess.Popen([
+                    'aptly',
+                    'repo',
+                    '-with-deps',
+                    '-dep-follow-source',
+                    'copy',
+                    package.os,
+                    '{0}-{1}'.format(self.codename, self.release),
+                    '$Source ({0}), $SourceVersion (= {1}-{2})'.format(
+                        package.source_name,
+                        package.version.strversion,
+                        package.version.release),
+                    ]).communicate()
             else:
-                self.dirty = True
+                subprocess.Popen([
+                    'aptly',
+                    'repo',
+                    'copy',
+                    package.os,
+                    '{0}-{1}'.format(self.codename, self.release),
+                    '{0} (= {1}-{2}) {{{3}}}'.format(
+                        package.name,
+                        package.version.strversion,
+                        package.version.release,
+                        package.arch),
+                    ]).communicate()
+
+        if update_metadata:
+            self.update_metadata()
+        else:
+            self.dirty = True
 
         # Create a new repo.package.Metadata with the new path
         new_package = repo.package.Metadata(
                 package.name,
                 package.version.strversion, package.version.release,
-                dest_path,
+                package.path,
                 package.arch,
                 package.source_name,
                 self.codename)
@@ -236,58 +191,15 @@ class Repository(repo.Repository):
         Update the package metadata from the changes files in a repository
         """
         if self.dirty or force:
-            confdir = os.path.join(self.repo_path, "conf")
-            distributions_file = os.path.join(confdir, "distributions")
-
-            if not os.path.exists(confdir):
-                os.makedirs(confdir, 0o755)
-
-            Repository._update_deb_distributions_conf(
-                distributions_file, self.codename)
-            oscmd = 'reprepro --silent -b "%s" export' % (self.repo_path)
-            os.system(oscmd)
+            subprocess.Popen([
+                'aptly',
+                'publish',
+                'update',
+                self.codename,
+                self.release,
+                ]).communicate()
             self.dirty = False
             self.create_index(self.repo_path, recursive=True)
-
-    @staticmethod
-    def _update_deb_distributions_conf(conf_file_path, distro):
-        """
-        Update the +conf/distributions+ file at the specified path to contain
-        information about the named distribution if it is not present yet.
-
-        Parameters
-        ----------
-        *conf_file_path*::
-            Path to the +conf/distributions+ to modify (str)
-        *distro*::
-            Distribution codename to add to 'conf_file_path' (str)
-        """
-        distribution_data = """
-Label: Globus Toolkit
-Codename: %s
-Architectures: amd64 i386 source
-Components: contrib
-DebIndices: Packages Release . .gz .bz2
-DscIndices: Sources Release .gz .bz2
-Contents: . .gz .bz2
-SignWith: yes
-Tracking: keep includechanges
-Description: Globus Toolkit Packages
-""" % (distro)
-        f = None
-        if not os.path.exists(conf_file_path):
-            f = file(conf_file_path, "w+")
-        else:
-            f = file(conf_file_path, "r+")
-
-        for l in f:
-            cnm = codename_re.match(l)
-            if cnm is not None and cnm.group(1) == distro:
-                f.close()
-                return
-
-        f.write(distribution_data)
-        f.close()
 
 
 class Release(repo.Release):
@@ -299,9 +211,11 @@ class Release(repo.Release):
             r[codename] = {}
             for arch in arches:
                 if arch == 'source':
-                    r[codename]['src'] = Repository(topdir, codename, arch)
+                    r[codename]['src'] = Repository(
+                        topdir, codename, arch, name)
                 else:
-                    r[codename][arch] = Repository(topdir, codename, arch)
+                    r[codename][arch] = Repository(
+                        topdir, codename, arch, name)
         super(Release, self).__init__(name, r)
 
     def repositories_for_package(self, package):
@@ -361,20 +275,21 @@ class Manager(repo.Manager):
         for release in releases:
             deb_releases[release] = Release(
                     release,
-                    os.path.join(root, release, 'deb'),
+                    os.path.join(root, 'aptly'),
                     codenames)
         super(Manager, self).__init__(deb_releases)
 
     @staticmethod
     def find_codenames(root, release):
         codenames = []
-        release_dists_dir = os.path.join(root, release, "deb", "dists")
 
-        if os.path.exists(release_dists_dir):
-            for codename in os.listdir(release_dists_dir):
-                if os.path.isdir(os.path.join(
-                            release_dists_dir, codename)):
-                    codenames.append(codename)
+        if os.path.exists(root):
+            aptly = subprocess.Popen(
+                ['aptly', '--raw', 'repo', 'list'],
+                stdout=subprocess.PIPE)
+            out, err = aptly.communicate()
+            codenames = list(
+                set(repo.split('-')[0] for repo in out.split("\n")))
         return codenames
 
     def __str__(self):
