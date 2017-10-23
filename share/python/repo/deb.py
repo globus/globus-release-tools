@@ -49,6 +49,7 @@ class Repository(repo.Repository):
         if arch == 'source' or arch == 'all':
             cmd = [
                 'aptly',
+                '-config', os.path.join(self.repo_path, 'aptly.conf'),
                 '--format',
                 '{{.Package}}|{{.Version}}|{{.Architecture}}|{{.Source}}',
                 'repo', 'search', '{0}-{1}'.format(codename, release),
@@ -58,7 +59,9 @@ class Repository(repo.Repository):
             out, err = pkglist.communicate()
         else:
             cmd = [
-                'aptly', '--format',
+                'aptly',
+                '-config', os.path.join(self.repo_path, 'aptly.conf'),
+                '--format',
                 '{{.Package}}|{{.Version}}|{{.Architecture}}|{{.Source}}',
                 'repo', 'search', '{0}-{1}'.format(codename, release),
                 '$Architecture (={0})'.format(arch)]
@@ -139,6 +142,7 @@ class Repository(repo.Repository):
         if package.path.endswith("changes"):
             cmd = [
                 'aptly',
+                '-config', os.path.join(self.repo_path, 'aptly.conf'),
                 '--no-remove-files=true',
                 '--repo={0}'.format(self.codename),
                 'repo', 'include', package.path,
@@ -149,6 +153,7 @@ class Repository(repo.Repository):
             if package.arch == 'src':
                 cmd = [
                     'aptly',
+                    '-config', os.path.join(self.repo_path, 'aptly.conf'),
                     'repo',
                     '-with-deps',
                     '-dep-follow-source',
@@ -165,6 +170,7 @@ class Repository(repo.Repository):
             else:
                 cmd = [
                     'aptly',
+                    '-config', os.path.join(self.repo_path, 'aptly.conf'),
                     'repo',
                     'copy',
                     package.os,
@@ -209,6 +215,7 @@ class Repository(repo.Repository):
         if self.dirty or force:
             cmd = [
                 'aptly',
+                '-config', os.path.join(self.repo_path, 'aptly.conf'),
                 'publish',
                 'update',
                 self.codename,
@@ -308,8 +315,10 @@ class Manager(repo.Manager):
         codenames = []
 
         if os.path.exists(root):
-            aptly = subprocess.Popen(
-                ['aptly', '--raw', 'repo', 'list'],
+            aptly = subprocess.Popen([
+                'aptly',
+                '-config', os.path.join(root, 'aptly', 'aptly.conf'),
+                '--raw', 'repo', 'list'],
                 stdout=subprocess.PIPE)
             out, err = aptly.communicate()
             codenames = [
