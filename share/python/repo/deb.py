@@ -213,7 +213,7 @@ class Repository(repo.Repository):
                 'publish',
                 'update',
                 self.codename,
-                self.release,
+                'filesystem:aptly:{0}'.format(self.release),
             ]
             subprocess.Popen(cmd).communicate()
             self.dirty = False
@@ -253,8 +253,9 @@ class Release(repo.Release):
 
     def update_metadata(self, osname=None, arch=None, force=False):
         for repository in self.repositories:
-             r = self.repositories[repository]
-             r[r.keys()[0]].update_metadata(force)
+            r = self.repositories[repository]
+            r[r.keys()[0]].update_metadata(force)
+
 
 class Manager(repo.Manager):
     """
@@ -315,7 +316,7 @@ class Manager(repo.Manager):
             out, err = aptly.communicate()
             codenames = [
                 x for x in list(
-                set(repo.split('-')[0] for repo in out.split("\n")))
+                    set(repo.split('-')[0] for repo in out.split("\n")))
                 if x != '']
         return codenames
 
