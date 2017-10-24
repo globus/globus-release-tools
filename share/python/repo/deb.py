@@ -79,7 +79,7 @@ class Repository(repo.Repository):
             name, version, pkgarch, source = line.split("|")
 
             if ':' in version:
-                version, release = version.strip().split(": ")[1].split("-", 1)
+                version, release = version.strip().split(":")[1].split("-", 1)
             else:
                 version, release = version.strip().split("-", 1)
             if name not in self.packages:
