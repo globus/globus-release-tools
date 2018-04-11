@@ -403,6 +403,16 @@ class Manager(object):
                     name=self.package_name(name), os=os, version=version,
                     newest_only=True)]
 
+        src_candidates_by_os = {}
+        for src in src_candidates:
+            source_and_os = "{0}:{1}".format(src.source_name, src.os)
+            if (source_and_os not in src_candidates_by_os
+                    or src_candidates_by_os[source_and_os].version
+                    < src.version):
+                src_candidates_by_os[source_and_os] = src
+
+        src_candidates = [src_candidates_by_os[x] for x in src_candidates_by_os]
+
         result = []
         seen = {}
         to_release_object = self.get_release(to_release)
