@@ -256,7 +256,7 @@ class Release(repo.Release):
         for repository in self.repositories:
             r = self.repositories[repository]
             r[r.keys()[0]].update_metadata(force)
-        self.create_index(self.release_root, recursive=True)
+        Repository.create_index(self.release_root, recursive=True)
 
 
 class Manager(repo.Manager):
