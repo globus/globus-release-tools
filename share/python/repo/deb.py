@@ -303,7 +303,7 @@ class Manager(repo.Manager):
                     release,
                     os.path.join(root, 'aptly'),
                     codenames,
-                    root=root)
+                    root=os.path.join(root, release, 'deb'))
         super(Manager, self).__init__(deb_releases)
 
     @staticmethod
