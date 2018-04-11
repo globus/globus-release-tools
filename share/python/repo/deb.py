@@ -223,7 +223,7 @@ class Repository(repo.Repository):
 class Release(repo.Release):
     def __init__(
             self, name, topdir, codenames=default_codenames,
-            arches=default_arches):
+            arches=default_arches, root=None):
         r = {}
         for codename in codenames:
             r[codename] = {}
@@ -235,6 +235,7 @@ class Release(repo.Release):
                     r[codename][arch] = Repository(
                         topdir, codename, arch, name)
         super(Release, self).__init__(name, r)
+        self.release_root = root
 
     def repositories_for_package(self, package):
         """
@@ -255,6 +256,7 @@ class Release(repo.Release):
         for repository in self.repositories:
             r = self.repositories[repository]
             r[r.keys()[0]].update_metadata(force)
+        self.create_index(self.release_root, recursive=True)
 
 
 class Manager(repo.Manager):
@@ -300,7 +302,8 @@ class Manager(repo.Manager):
             deb_releases[release] = Release(
                     release,
                     os.path.join(root, 'aptly'),
-                    codenames)
+                    codenames,
+                    root=root)
         super(Manager, self).__init__(deb_releases)
 
     @staticmethod
