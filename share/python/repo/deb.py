@@ -258,7 +258,7 @@ class Release(repo.Release):
             if r.dirty:
                 if cleaned:
                     r.dirty = False
-            if r.dirty or force:
+            if r.dirty or (force and not cleaned):
                 r.update_metadata(force)
                 cleaned = True
         Repository.create_index(self.release_root, recursive=True)
