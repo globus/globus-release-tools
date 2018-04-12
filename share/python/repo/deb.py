@@ -253,14 +253,14 @@ class Release(repo.Release):
             return []
 
     def update_metadata(self, osname=None, arch=None, force=False):
-        cleaned = False
+        cleaned = {}
         for r in self.repositories_for_os_arch(osname, arch):
             if r.dirty:
-                if cleaned:
+                if cleaned.get(r.codename, False):
                     r.dirty = False
-            if r.dirty or (force and not cleaned):
+            if r.dirty or (force and not cleaned.get(r.codename, False)):
                 r.update_metadata(force)
-                cleaned = True
+                cleaned[r.codename] = True
         Repository.create_index(self.release_root, recursive=True)
 
 
