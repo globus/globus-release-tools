@@ -144,8 +144,7 @@ class Release(repo.Release):
     """
     pkg_re = re.compile(
         r"(?P<name>"
-        "(?!globusonline-|gridftp-blackpearl-dsi-)"
-        "[^-]*|globusonline-[a-z-]*[a-z]*|gridftp-blackpearl-dsi-)"
+        "([^0-9].*(?=-[0-9])))"
         "-(?P<version>.*?)(-src|-gt5.2)?.tar.gz$")
 
     def __init__(self, name, topdir):
