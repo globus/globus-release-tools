@@ -44,6 +44,7 @@ class Repository(repo.Repository):
         self.codename = codename
         self.release = release
         self.dirty = False
+        self.arch = arch
 
         if arch == 'source' or arch == 'all':
             cmd = [
@@ -52,7 +53,7 @@ class Repository(repo.Repository):
                 '--format',
                 '{{.Package}}|{{.Version}}|{{.Architecture}}|{{.Source}}',
                 'repo', 'search', '{0}-{1}'.format(codename, release),
-                '$Architecture (=source)']
+                '$Architecture (= source) | $Architecture (= all)']
             pkglist = subprocess.Popen(cmd, stdout=subprocess.PIPE)
             out, err = pkglist.communicate()
         else:
@@ -88,18 +89,35 @@ class Repository(repo.Repository):
                 if arch == 'source':
                     source = name
                     src = source
-                    self.packages[name].append(
-                            repo.package.Metadata(
-                                name,
-                                version,
-                                release,
-                                '{0}_{1}-{2}.dsc'.format(
+                    if pkgarch == 'source':
+                        self.packages[name].append(
+                                repo.package.Metadata(
                                     name,
                                     version,
-                                    release),
-                                'src',
-                                src,
-                                '{0}-{1}'.format(self.codename, self.release)))
+                                    release,
+                                    '{0}_{1}-{2}.dsc'.format(
+                                        name,
+                                        version,
+                                        release),
+                                    'src',
+                                    src,
+                                    '{0}-{1}'.format(
+                                        self.codename, self.release)))
+                    elif pkgarch == 'all':
+                        self.packages[name].append(
+                                repo.package.Metadata(
+                                    name,
+                                    version,
+                                    release,
+                                    '{0}_{1}-{2}_{3}.deb'.format(
+                                        name,
+                                        version,
+                                        release,
+                                        pkgarch),
+                                    pkgarch,
+                                    src,
+                                    '{0}-{1}'.format(
+                                        self.codename, self.release)))
                 else:
                     if source is None or source == '<no value>':
                         source = name
