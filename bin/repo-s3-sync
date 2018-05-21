@@ -222,8 +222,10 @@ def s3_sync_dir(source_dir, bucket_name, dest_prefix, dry_run=True,
             extra_args = {'ContentType': mime_type}
         else:
             extra_args = {}
+        transfer_config = boto3.s3.transfer.TransferConfig(
+            multipart_threshold=500 * 1024 * 1024)
         s3_client.upload_file(filename, bucket_name, dest_path,
-                              ExtraArgs=extra_args)
+                              ExtraArgs=extra_args, Config=transfer_config)
 
     pool = ThreadPool(pool_size)
     pool.map(handle_file, files_in_dir(source_dir))
