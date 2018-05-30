@@ -79,6 +79,7 @@ class Repository(repo.Repository):
 
             name, version, pkgarch, source = line.split("|")
 
+            fullversion = version.strip().split("-", 1)[0]
             if ':' in version:
                 version, release = version.strip().split(":")[1].split("-", 1)
             else:
@@ -93,7 +94,7 @@ class Repository(repo.Repository):
                         self.packages[name].append(
                                 repo.package.Metadata(
                                     name,
-                                    version,
+                                    fullversion,
                                     release,
                                     '{0}_{1}-{2}.dsc'.format(
                                         name,
@@ -107,7 +108,7 @@ class Repository(repo.Repository):
                         self.packages[name].append(
                                 repo.package.Metadata(
                                     name,
-                                    version,
+                                    fullversion,
                                     release,
                                     '{0}_{1}-{2}_{3}.deb'.format(
                                         name,
@@ -125,7 +126,7 @@ class Repository(repo.Repository):
                     self.packages[name].append(
                             repo.package.Metadata(
                                 name,
-                                version,
+                                fullversion,
                                 release,
                                 '{0}_{1}-{2}_{3}.deb'.format(
                                     name,
