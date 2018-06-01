@@ -20,7 +20,6 @@ import argparse
 import datetime
 import grp
 import os
-import re
 import socket
 import sys
 
@@ -85,7 +84,7 @@ if args.type == 'deb' or args.type == 'all':
     pkg_managers['deb'] = repo.deb.Manager(
         root=args.root, releases=[args.release],
         exclude_os_names=exclude_os_names)
-)
+
 if args.type == 'yum' or args.type == 'all':
     print("Parsing yum")
     pkg_managers['yum'] = repo.yum.Manager(
