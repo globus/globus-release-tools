@@ -30,6 +30,15 @@ def __v2fhelper(v, suff, version, weight):
     return parts[0]
 
 
+def __v2fhelper2(v, suff, version, weightfunc):
+    parts = re.split(suff, v)
+    if 2 != len(parts):
+        return v
+    version[4] = weightfunc(re.search(suff, v).group(0))
+    version[5] = parts[1] if parts[1] else 0
+    return parts[0]
+
+
 def version2float(v):
     """
     Convert a Mozilla-style version string into a floating-point number
@@ -89,9 +98,8 @@ def version2float(v):
         elif "p2" in v:
             v = __v2fhelper(v, "p2", version, 1)
         else:
-            v = __v2fhelper(v, "a",  version, 1)
-            v = __v2fhelper(v, "b",  version, 2)
-            v = __v2fhelper(v, "g",  version, 7)
+            v = __v2fhelper2(
+                v, "[a-z]", version, lambda x: 1 + ord(x[-1]) - ord('a'))
         v = __v2fhelper(v, "rc", version, 3)
 
         parts = v.split(".")[:4]
