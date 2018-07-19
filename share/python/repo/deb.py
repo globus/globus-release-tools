@@ -87,42 +87,24 @@ class Repository(repo.Repository):
             if name not in self.packages:
                 self.packages[name] = []
 
-                if arch == 'source':
-                    source = name
-                    src = source
-                    if pkgarch == 'source':
-                        self.packages[name].append(
-                                repo.package.Metadata(
+            if arch == 'source':
+                source = name
+                src = source
+                if pkgarch in ['source', 'any']:
+                    self.packages[name].append(
+                            repo.package.Metadata(
+                                name,
+                                fullversion,
+                                release,
+                                '{0}_{1}-{2}.dsc'.format(
                                     name,
-                                    fullversion,
-                                    release,
-                                    '{0}_{1}-{2}.dsc'.format(
-                                        name,
-                                        version,
-                                        release),
-                                    'src',
-                                    src,
-                                    '{0}-{1}'.format(
-                                        self.codename, self.release)))
-                    elif pkgarch == 'all':
-                        self.packages[name].append(
-                                repo.package.Metadata(
-                                    name,
-                                    fullversion,
-                                    release,
-                                    '{0}_{1}-{2}_{3}.deb'.format(
-                                        name,
-                                        version,
-                                        release,
-                                        pkgarch),
-                                    pkgarch,
-                                    src,
-                                    '{0}-{1}'.format(
-                                        self.codename, self.release)))
-                else:
-                    if source is None or source == '<no value>':
-                        source = name
-                    src = source
+                                    version,
+                                    release),
+                                'src',
+                                src,
+                                '{0}-{1}'.format(
+                                    self.codename, self.release)))
+                elif pkgarch == 'all':
                     self.packages[name].append(
                             repo.package.Metadata(
                                 name,
@@ -135,7 +117,25 @@ class Repository(repo.Repository):
                                     pkgarch),
                                 pkgarch,
                                 src,
-                                '{0}-{1}'.format(self.codename, self.release)))
+                                '{0}-{1}'.format(
+                                    self.codename, self.release)))
+            else:
+                if source is None or source == '<no value>':
+                    source = name
+                src = source
+                self.packages[name].append(
+                        repo.package.Metadata(
+                            name,
+                            fullversion,
+                            release,
+                            '{0}_{1}-{2}_{3}.deb'.format(
+                                name,
+                                version,
+                                release,
+                                pkgarch),
+                            pkgarch,
+                            src,
+                            '{0}-{1}'.format(self.codename, self.release)))
 
         for n in self.packages:
             self.packages[n].sort()
