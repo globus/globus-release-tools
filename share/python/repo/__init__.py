@@ -132,14 +132,21 @@ class Repository(object):
                 and package.version == source.version
             ]
         elif name is not None:
-            if name in self.packages:
-                if version is not None:
-                    package_candidates = [
-                        (pkg) for pkg in self.packages[name]
-                        if pkg.version == version
-                    ]
-                else:
-                    package_candidates = self.packages[name]
+            if version is not None:
+                package_candidates = [
+                    (package)
+                    for package_list in self.packages
+                    for package in self.packages[package_list]
+                    if name in [package.source_name, package.name]
+                    and package.version == version
+                ]
+            else:
+                package_candidates = [
+                    (package)
+                    for package_list in self.packages
+                    for package in self.packages[package_list]
+                    if name in [package.source_name, package.name]
+                ]
             if arch is not None:
                 package_candidates = [
                     (p)
@@ -401,7 +408,7 @@ class Manager(object):
         # those in the to_release
         src_candidates = [src_info for src_info in from_release.get_packages(
                     name=self.package_name(name), os=os, version=version,
-                    newest_only=True)]
+                    newest_only=(version is None))]
 
         src_candidates_by_os = {}
         for src in src_candidates:

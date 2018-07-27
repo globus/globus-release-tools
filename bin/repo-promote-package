@@ -33,6 +33,7 @@ sys.path.append(os.path.join(
 import repo
 import repo.advisories
 import repo.deb
+import repo.package
 import repo.packages
 import repo.installers
 import repo.yum
@@ -54,6 +55,10 @@ parser.add_argument(
     dest="from_release",
     choices=["unstable", "testing"],
     default="unstable")
+parser.add_argument(
+    "-v", "--version",
+    help="Only sync packages with version number VERSION",
+    dest="version"),
 parser.add_argument(
     "-t", "--to",
     help="Copy packages to the TO release [testing]",
@@ -147,9 +152,14 @@ print("==================")
 for man in pkg_managers:
     print("Promoting %s packages" % man)
     manager = pkg_managers[man]
+    version = None
+    if args.version is not None:
+        version=repo.package.Version(args.version)
     packages = manager.promote_packages(
             name=args.package, from_release=args.from_release,
-            to_release=args.to_release, dryrun=args.dryrun, exclude_package_names=exclude_package_names)
+            to_release=args.to_release, dryrun=args.dryrun,
+            exclude_package_names=exclude_package_names,
+            version=version)
 
     for p in packages:
         pkey = "-".join([p.name, p.version.strversion])
