@@ -339,4 +339,10 @@ class Manager(repo.Manager):
     def __str__(self):
         return " ".join(["Yum Manager [", ",".join(self.releases.keys()), "]"])
 
+    def package_name(self, name):
+        if name is None or name.startswith('mod_auth_openidc'):
+            return name
+        else:
+            return name.replace('_', '-')
+
 # vim: filetype=python:
