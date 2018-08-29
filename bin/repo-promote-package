@@ -189,7 +189,7 @@ if args.dryrun:
     for p in pdict.keys():
         print(p, " to [", ", ".join(pdict[p]), "]")
 
-if args.package is None:
+if args.package is None and 'installers' not in exclude_package_names:
     print("=============================")
     print("Parsing installers repository")
     print("=============================")
