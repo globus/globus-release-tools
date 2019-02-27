@@ -447,20 +447,4 @@ class Manager(object):
         return result
 
 
-def setup_gpg_agent():
-    if os.getenv("GPG_AGENT_INFO") is None:
-        proc = Popen(
-            [
-                "/usr/bin/gpg-agent",
-                "--daemon",
-                "--default-cache-ttl", "14400",
-                "--max-cache-ttl", "14400"
-            ],
-            stdout=PIPE)
-        (procout, procerr) = proc.communicate()
-        var, val = procout.split(";")[0].split("=")
-        os.putenv(var, val)
-        procpid = int(val.split(":")[1])
-        atexit.register(lambda x: os.kill(x, signal.SIGTERM), procpid)
-
 # vim: filetype=python:

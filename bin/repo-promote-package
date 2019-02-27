@@ -113,8 +113,6 @@ if socket.gethostname() == 'globuscvs':
     os.umask(0o2)
     repo.gid = gid
 
-repo.setup_gpg_agent()
-
 releases = [args.from_release, args.to_release]
 
 print("====================")
