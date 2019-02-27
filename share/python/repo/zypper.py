@@ -234,11 +234,8 @@ DATADIR RPMS
         content_asc = os.path.join(distro_repodir, "content.asc")
         if os.path.exists(content_asc):
             os.remove(content_asc)
-        if os.getenv("GPG_AGENT_INFO") is not None:
-            os.system("cd \"%s\"; gpg --batch --use-agent -ab content" %
-                      (distro_repodir))
-        else:
-            os.system("cd \"%s\"; gpg -ab content" % (distro_repodir))
+        os.system("cd \"%s\"; gpg --batch --use-agent -ab content" %
+                  (distro_repodir))
         self.create_index(distro_repodir, recursive=True)
 
 
