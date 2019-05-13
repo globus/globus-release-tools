@@ -223,8 +223,7 @@ class Repository(repo.Repository):
                 p for p in self.packages[package.name]
                 if p.version != package.version
             ]
-
-        self.packages[package.name].sort()
+            self.packages[package.name].sort()
         if update_metadata:
             self.__createrepo()
         else:
