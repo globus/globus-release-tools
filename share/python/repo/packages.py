@@ -82,6 +82,24 @@ class Repository(repo.Repository):
             self.dirty = True
         return new_package
 
+    def remove_package(self, package, update_metadata=False):
+        dest_path = os.path.join(
+            self.repo_path, os.path.basename(package.path))
+        if os.path.exists(dest_path):
+            os.remove(dest_path)
+        if package.name in self.packages:
+            self.packages[package.name] = [
+                p for p in self.packages[package.name]
+                if p.version != package.version
+            ]
+
+        self.packages[package.name].sort()
+
+        if update_metadata:
+            self.update_metadata()
+        else:
+            self.dirty = True
+
     def update_metadata(self, force=False):
         """
         Update the checksums for the packages in this repository

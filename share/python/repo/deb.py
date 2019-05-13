@@ -45,24 +45,26 @@ class Repository(repo.Repository):
         self.release = release
         self.dirty = False
         self.arch = arch
+        self.aptly_config = os.path.join(self.repo_path, 'aptly.conf')
+        self.aptly_repo_name = '{0}-{1}'.format(codename, release)
 
         if arch == 'source' or arch == 'all':
             cmd = [
                 'aptly',
-                '-config', os.path.join(self.repo_path, 'aptly.conf'),
+                '-config', self.aptly_config,
                 '--format',
                 '{{.Package}}|{{.Version}}|{{.Architecture}}|{{.Source}}',
-                'repo', 'search', '{0}-{1}'.format(codename, release),
+                'repo', 'search', self.aptly_repo_name,
                 '$Architecture (= source) | $Architecture (= all)']
             pkglist = subprocess.Popen(cmd, stdout=subprocess.PIPE)
             out, err = pkglist.communicate()
         else:
             cmd = [
                 'aptly',
-                '-config', os.path.join(self.repo_path, 'aptly.conf'),
+                '-config', self.aptly_config,
                 '--format',
                 '{{.Package}}|{{.Version}}|{{.Architecture}}|{{.Source}}',
-                'repo', 'search', '{0}-{1}'.format(codename, release),
+                'repo', 'search', self.aptly_repo_name,
                 '$Architecture (={0})'.format(arch)]
             pkglist = subprocess.Popen(cmd, stdout=subprocess.PIPE)
             out, err = pkglist.communicate()
@@ -135,7 +137,7 @@ class Repository(repo.Repository):
                                 pkgarch),
                             pkgarch,
                             src,
-                            '{0}-{1}'.format(self.codename, self.release)))
+                            self.aptly_repo_name))
 
         for n in self.packages:
             self.packages[n].sort()
@@ -158,7 +160,7 @@ class Repository(repo.Repository):
         if package.path.endswith("changes"):
             cmd = [
                 'aptly',
-                '-config', os.path.join(self.repo_path, 'aptly.conf'),
+                '-config', self.aptly_config,
                 '--no-remove-files=true',
                 '--repo={0}'.format(self.codename),
                 'repo', 'include', package.path,
@@ -168,13 +170,13 @@ class Repository(repo.Repository):
             if package.arch == 'src':
                 cmd = [
                     'aptly',
-                    '-config', os.path.join(self.repo_path, 'aptly.conf'),
+                    '-config', self.aptly_config,
                     'repo',
                     '-with-deps',
                     '-dep-follow-source',
                     'copy',
                     package.os,
-                    '{0}-{1}'.format(self.codename, self.release),
+                    self.aptly_repo_name,
                     '$Source ({0}), $SourceVersion (= {1}-{2})'.format(
                         package.source_name,
                         package.version.strversion,
@@ -184,11 +186,11 @@ class Repository(repo.Repository):
             else:
                 cmd = [
                     'aptly',
-                    '-config', os.path.join(self.repo_path, 'aptly.conf'),
+                    '-config', self.aptly_config,
                     'repo',
                     'copy',
                     package.os,
-                    '{0}-{1}'.format(self.codename, self.release),
+                    self.aptly_repo_name,
                     '{0} (= {1}-{2}) {{{3}}}'.format(
                         package.name,
                         package.version.strversion,
@@ -221,6 +223,65 @@ class Repository(repo.Repository):
             self.dirty = True
         return new_package
 
+    def remove_package(self, package, update_metadata=False):
+        """
+        Remove *package* from this repository, optionally regenerating the
+        metadata. If update_metadata is equal to False (the default), then
+        the repository will be marked as dirty, but the update will not be
+        done.
+
+        Parameters
+        ----------
+        *package*::
+            The package to remove to this repository
+        *update_metadata*::
+            Flag indicating whether to update the repository metadata
+            immediately or not.
+        """
+        if package.arch == 'src':
+            cmd = [
+                'aptly',
+                '-config', self.aptly_config,
+                'repo',
+                'remove',
+                self.aptly_repo_name,
+                (
+                    '$Architecture (source), '
+                    '$Source ({name}), '
+                    '$SourceVersion (= {version}-{release})').format(
+                        name=package.source_name,
+                        version=package.version.strversion,
+                        release=package.version.release),
+            ]
+        else:
+            cmd = [
+                'aptly',
+                '-config', self.aptly_config,
+                'repo',
+                'remove',
+                self.aptly_repo_name,
+                '{0} (= {1}-{2}) {{{3}}}'.format(
+                    package.name,
+                    package.version.strversion,
+                    package.version.release,
+                    package.arch),
+            ]
+
+        subprocess.Popen(cmd).communicate()
+
+        # Remove package metadata from our state
+        if package.name in self.packages:
+            self.packages[package.name] = [
+                p for p in self.packages[package.name]
+                if p.version != package.version
+            ]
+
+        self.packages[package.name].sort()
+        if update_metadata:
+            self.update_metadata()
+        else:
+            self.dirty = True
+
     def update_metadata(self, force):
         """
         Update the package metadata from the changes files in a repository
@@ -228,7 +289,7 @@ class Repository(repo.Repository):
         if self.dirty or force:
             cmd = [
                 'aptly',
-                '-config', os.path.join(self.repo_path, 'aptly.conf'),
+                '-config', self.aptly_config,
                 'publish',
                 'update',
                 self.codename,

@@ -16,15 +16,12 @@
 Repository Management
 """
 
-import atexit
 import datetime
 import fnmatch
 import hashlib
 import os
 import os.path
 import re
-import signal
-from subprocess import Popen, PIPE
 
 default_root = "/mcs/globus.org/ftppub/gt6"
 default_api_root = "/mcs/globus.org/api"
@@ -309,6 +306,11 @@ class Release(object):
             repository.add_package(package, update_metadata)
             for repository in self.repositories_for_package(package)]
 
+    def remove_package(self, package, update_metadata=False):
+        return [
+            repository.remove_package(package, update_metadata)
+            for repository in self.repositories_for_package(package)]
+
     def update_metadata(self, osname=None, arch=None, force=False):
         for repository in self.repositories_for_os_arch(osname, arch):
             repository.update_metadata(force)
@@ -418,7 +420,9 @@ class Manager(object):
                     < src.version):
                 src_candidates_by_os[source_and_os] = src
 
-        src_candidates = [src_candidates_by_os[x] for x in src_candidates_by_os]
+        src_candidates = [
+            src_candidates_by_os[x] for x in src_candidates_by_os
+        ]
 
         result = []
         seen = {}
