@@ -125,7 +125,7 @@ class Manager(repo.Manager):
         *root*::
             Root of the release trees
         """
-        self.installers = [
+        self.disabled_installers = [
             InstallerInfo(
                 "Linux Binary Installer",
                 "linux",
@@ -144,21 +144,6 @@ class Manager(repo.Manager):
                 "(?P<buildno>-build(?P<release>[0-9]+))?"
                 "(?P<extension>\.pkg|\.tar\.gz)$",
                 "{basename}-{version}{buildno}{extension}".format),
-            InstallerInfo(
-                "RPM Installer",
-                'repo/rpm',
-                r"(?P<name>(?P<basename>[a-z-]*[a-z])"
-                "-(?P<version>[0-9.]*[0-9]))"
-                "(?P<buildno>-(?P<release>[0-9]+))"
-                "(?P<extension>.*\.noarch\.rpm)$",
-                "{basename}-{version}{buildno}{extension}".format),
-            InstallerInfo(
-                'Debian Installer',
-                "repo/deb",
-                r"(?P<name>(?P<basename>[a-z-]*[a-z])"
-                "_(?P<version>[0-9.]+))"
-                "(?P<buildno>-(?P<release>[0-9]+))?_all.deb$",
-                "{basename}_{version}{buildno}_all.deb".format),
             InstallerInfo(
                 "Source Installer",
                 'src',
@@ -181,6 +166,23 @@ class Manager(repo.Manager):
                 "-(?P<arch>[a-z0-9_]*-w64-mingw32))"
                 "(?P<buildno>-Build-(?P<release>[0-9]+)).zip$",
                 "{basename}-{version}-{arch}{buildno}.zip".format),
+        ]
+        self.installers = [
+            InstallerInfo(
+                "RPM Installer",
+                'repo/rpm',
+                r"(?P<name>(?P<basename>[a-z-]*[a-z])"
+                "-(?P<version>[0-9.]*[0-9]))"
+                "(?P<buildno>-(?P<release>[0-9]+))"
+                "(?P<extension>.*\.noarch\.rpm)$",
+                "{basename}-{version}{buildno}{extension}".format),
+            InstallerInfo(
+                'Debian Installer',
+                "repo/deb",
+                r"(?P<name>(?P<basename>[a-z-]*[a-z])"
+                "_(?P<version>[0-9.]+))"
+                "(?P<buildno>-(?P<release>[0-9]+))?_all.deb$",
+                "{basename}_{version}{buildno}_all.deb".format),
         ]
 
         release = {}
