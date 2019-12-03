@@ -134,7 +134,7 @@ class Repository(object):
                     (package)
                     for package_list in self.packages
                     for package in self.packages[package_list]
-                    if name in [package.source_name, package.name]
+                    if name == package.name
                     and package.version == version
                 ]
             else:
@@ -142,7 +142,7 @@ class Repository(object):
                     (package)
                     for package_list in self.packages
                     for package in self.packages[package_list]
-                    if name in [package.source_name, package.name]
+                    if name == package.name
                 ]
             if arch is not None:
                 package_candidates = [
