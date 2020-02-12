@@ -107,7 +107,7 @@ def version2float(v):
             version[i] = p
         ver = float(version[0])
         ver += float(version[1]) / 100.
-        if isinstance(version[2], str):
+        if isinstance(version[2], (unicode, str)):
             ver += float(version[2].rstrip("~")) / 10000.
         else:
             ver += float(version[2]) / 10000.
