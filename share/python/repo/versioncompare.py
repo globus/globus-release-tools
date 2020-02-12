@@ -107,7 +107,7 @@ def version2float(v):
             version[i] = p
         ver = float(version[0])
         ver += float(version[1]) / 100.
-        ver += float(version[2]) / 10000.
+        ver += float(version[2].rstrip("-")) / 10000.
         ver += float(version[3]) / 1000000.
         ver += float(version[4]) / 100000000.
         ver += float(version[5]) / 10000000000.
