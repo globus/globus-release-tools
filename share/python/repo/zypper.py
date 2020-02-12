@@ -342,12 +342,13 @@ class Manager(repo.Manager):
 
         sles_top_dir = os.path.join(root, release, "rpm", "sles")
 
-        for osver in os.listdir(sles_top_dir):
-            osnameverdir = os.path.join(sles_top_dir, osver)
-            if (os.path.isdir(osnameverdir)
-                    and not os.path.islink(osnameverdir)):
-                osnamever = os.path.join("sles", osver)
-                oses.append(osnamever)
+        if os.path.exists(sles_top_dir):
+            for osver in os.listdir(sles_top_dir):
+                osnameverdir = os.path.join(sles_top_dir, osver)
+                if (os.path.isdir(osnameverdir)
+                        and not os.path.islink(osnameverdir)):
+                    osnamever = os.path.join("sles", osver)
+                    oses.append(osnamever)
         return oses
 
     def __str__(self):
