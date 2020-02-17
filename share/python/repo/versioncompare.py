@@ -60,6 +60,45 @@ def version2float(v):
     if ':' in v:
         v = v.split(":")[1]
 
+    # if it's a sane package major.minor[.patch][~otherstuff]
+    m = re.match(r'^(\d+)\.(\d+)(\.(\d+))?(~([a-zA-Z]*)([0-9]*))?$', v, 0)
+    if m:
+        g = m.groups()
+        version[0] = int(g[0])
+        if g[1]:
+            version[1] = int(g[1])
+        if g[3]:
+            version[3] = g[3]
+        if g[5]:
+            if g[5].startswith("a"):
+                version[4] = 1
+                version[5] = 0
+                if g[6]:
+                    version[5] = int(g[6])
+            elif g[5].startswith("b"):
+                version[4] = 2
+                version[5] = 0
+                if g[6]:
+                    version[5] = int(g[6])
+            elif g[5].startswith("rc"):
+                version[4] = 3
+                if g[6]:
+                    version[5] = int(g[6])
+            else:
+                print("Can't parse ~prefix, considering this rc")
+                version[4] = 3
+                if g[6]:
+                    version[5] = int(g[6])
+            version[6] = 0
+        ver = float(version[0])
+        ver += float(version[1]) / 100.
+        ver += float(version[2]) / 10000.
+        ver += float(version[3]) / 1000000.
+        ver += float(version[4]) / 100000000.
+        ver += float(version[5]) / 10000000000.
+        ver += float(version[6]) / 1000000000000.
+        return ver
+
     parts = v.split("pre")
     if 2 == len(parts):
         version[6] = 0
@@ -107,10 +146,7 @@ def version2float(v):
             version[i] = p
         ver = float(version[0])
         ver += float(version[1]) / 100.
-        if isinstance(version[2], (unicode, str)):
-            ver += float(version[2].rstrip("~")) / 10000.
-        else:
-            ver += float(version[2]) / 10000.
+        ver += float(version[2]) / 10000.
         ver += float(version[3]) / 1000000.
         ver += float(version[4]) / 100000000.
         ver += float(version[5]) / 10000000000.
