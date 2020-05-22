@@ -95,7 +95,7 @@ for manager in pkg_managers:
         ]
         all_packages = non_newest
     for p in all_packages:
-        if dryrun:
+        if args.dryrun:
             print("Would remove {}".format(p))
         else:
             release.remove_package(p)
