@@ -32,14 +32,7 @@ import repo
 import repo.deb
 import repo.yum
 import repo.zypper
-
-if socket.gethostname() == 'globuscvs':
-    gid = grp.getgrnam('globdev').gr_gid
-    if os.getgid() != gid:
-        print("Run newgrp globdev before running this script")
-        exit(1)
-    os.umask(0o2)
-    repo.gid = gid
+import repo.package
 
 parser = argparse.ArgumentParser(
         description="Remove packages")
@@ -53,7 +46,11 @@ parser.add_argument(
     help="Only list PACKAGE [all packages]")
 parser.add_argument(
     "-v", "--version",
-    help="Only list a particular VERSION [all older versions]")
+    help="Only delete a particular VERSION [all older versions]")
+parser.add_argument(
+    "-V", "--less-than-version",
+    metavar="VERSION",
+    help="Only delete older than VERSION")
 parser.add_argument(
     "-d", "--dryrun",
     help="Print packages that would have been deleted",
@@ -79,20 +76,32 @@ if args.version is not None:
 else:
     version = None
 
+
+less_than_version = None
+if args.less_than_version:
+    less_than_version = repo.package.Version(args.less_than_version)
+
 for manager in pkg_managers:
     release = manager.get_release(args.release)
     all_packages = [
         src_info for src_info in release.get_packages(
             name=manager.package_name(args.package), version=version)]
+
     if args.version is None:
         newest_packages = [
             src_info for src_info in release.get_packages(
                 name=manager.package_name(args.package),
                 newest_only=True, version=version)]
-        non_newest = [
-            p for p in all_packages
-            if p not in newest_packages
-        ]
+        if less_than_version:
+            non_newest = [
+                p for p in all_packages
+                if p.version < less_than_version and p not in newest_packages
+            ]
+        else:
+            non_newest = [
+                p for p in all_packages
+                if p not in newest_packages
+            ]
         all_packages = non_newest
     for p in all_packages:
         if args.dryrun:
