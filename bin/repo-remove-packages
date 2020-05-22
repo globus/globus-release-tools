@@ -114,3 +114,5 @@ for manager in pkg_managers:
         if pkey not in pdict:
             pdict[pkey] = set()
         pdict[pkey].add(p.os)
+        manager = pkg_managers[man]
+    release.update_metadata(force=True)
