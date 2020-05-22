@@ -55,6 +55,10 @@ parser.add_argument(
     "-v", "--version",
     help="Only list a particular VERSION [all older versions]")
 parser.add_argument(
+    "-d", "--dryrun",
+    help="Print packages that would have been deleted",
+    action='store_true')
+parser.add_argument(
     "release",
     help="Delete packages in the release [unstable]",
     choices=["unstable", "testing", "stable"])
@@ -91,7 +95,10 @@ for manager in pkg_managers:
         ]
         all_packages = non_newest
     for p in all_packages:
-        release.remove_package(p)
+        if dryrun:
+            print("Would remove {}".format(p))
+        else:
+            release.remove_package(p)
 
     for p in all_packages:
         pkey = "-".join([p.name, p.version.strversion])
