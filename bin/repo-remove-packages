@@ -57,6 +57,10 @@ parser.add_argument(
     help="Print packages that would have been deleted",
     action='store_true')
 parser.add_argument(
+    "-s", "--source",
+    help="Remove source tarballs as well",
+    action='store_true')
+parser.add_argument(
     "release",
     help="Delete packages in the release [unstable]",
     choices=["unstable", "testing", "stable"])
@@ -69,8 +73,12 @@ pkg_managers = [
     repo.deb.Manager(root=args.root, releases=releases),
     repo.yum.Manager(root=args.root, releases=releases),
     repo.zypper.Manager(root=args.root, releases=releases),
-    repo.packages.Manager(root=args.root),
 ]
+
+if args.source:
+    pkg_managers.append(
+        repo.packages.Manager(root=args.root)
+    )
 
 pdict = dict()
 if args.version is not None:

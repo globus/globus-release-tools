@@ -16,6 +16,7 @@
 Package to manage the Globus Toolkit source tarball repository
 """
 
+import glob
 import os
 import re
 import repo
@@ -87,6 +88,9 @@ class Repository(repo.Repository):
             self.repo_path, os.path.basename(package.path))
         if os.path.exists(dest_path):
             os.remove(dest_path)
+        for fn in glob.glob(dest_path + ".*"):
+            if os.path.exists(fn):
+                os.remove(fn)
         if package.name in self.packages:
             self.packages[package.name] = [
                 p for p in self.packages[package.name]
