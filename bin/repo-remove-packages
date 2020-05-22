@@ -67,7 +67,8 @@ releases = [args.release]
 pkg_managers = [
     repo.deb.Manager(root=args.root, releases=releases),
     repo.yum.Manager(root=args.root, releases=releases),
-    repo.zypper.Manager(root=args.root, releases=releases)
+    repo.zypper.Manager(root=args.root, releases=releases),
+    repo.packages.Manager(root=args.root),
 ]
 
 pdict = dict()
