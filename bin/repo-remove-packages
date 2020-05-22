@@ -33,6 +33,7 @@ import repo.deb
 import repo.yum
 import repo.zypper
 import repo.package
+import repo.packages
 
 parser = argparse.ArgumentParser(
         description="Remove packages")
