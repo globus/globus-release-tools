@@ -209,7 +209,11 @@ class Manager(repo.Manager):
         return self.releases['release']
 
     def package_name(self, name):
-        return name.replace("-", "_") if name is not None else None
+        if name:
+            if name in ['globus-connect-server5.4', 'globus-connect-server-prereqs']:
+                return name
+            else:
+                return name.replace("-", "_")
 
     def __str__(self):
         return " ".join(
