@@ -296,6 +296,13 @@ class Repository(repo.Repository):
                 'filesystem:aptly:{0}'.format(self.release),
             ]
             subprocess.Popen(cmd).communicate()
+            cmd = [
+                'aptly',
+                '-config', self.aptly_config,
+                'db',
+                'cleanup',
+            ]
+            subprocess.Popen(cmd).communicate()
             self.dirty = False
             self.create_index(self.repo_path, recursive=True)
 
